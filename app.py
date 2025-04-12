@@ -1,6 +1,8 @@
 import streamlit as st
 import os
 
+print("Testing git push functionality")
+
 # Set page config
 st.set_page_config(
     page_title="Resume Enhancer",
