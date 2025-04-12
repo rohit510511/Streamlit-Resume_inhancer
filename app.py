@@ -1,59 +1,47 @@
+# app.py
+
 import streamlit as st
 import os
+from logic import process_resume_and_jd
 
 # Set page config
-st.set_page_config(
-    page_title="Resume Enhancer",
-    page_icon="📄",
-    layout="wide"
-)
-
-# Main title
+st.set_page_config(page_title="Resume Enhancer", page_icon="📄", layout="wide")
 st.title("📄 Resume Enhancer")
-st.markdown("Upload your resume and get AI-powered suggestions to enhance it!")
+st.markdown("Upload your resume and job description to get keyword match insights.")
+
+# Sidebar
+with st.sidebar:
+    st.header("About")
+    st.markdown("Enhance your resume with keyword analysis and score estimation.")
 
 # File uploader
 uploaded_file = st.file_uploader("Upload your resume (PDF or DOCX)", type=["pdf", "docx"])
 
-if uploaded_file is not None:
-    # Display file details
-    file_details = {
-        "Filename": uploaded_file.name,
-        "File type": uploaded_file.type,
-        "File size": f"{uploaded_file.size / 1024:.2f} KB"
-    }
-    st.write(file_details)
+# JD input
+jd_text = st.text_area("Paste the Job Description here")
 
-    # Save the file temporarily
-    with open(os.path.join("temp", uploaded_file.name), "wb") as f:
+if uploaded_file and jd_text:
+    # Save file temporarily
+    temp_dir = "temp"
+    os.makedirs(temp_dir, exist_ok=True)
+    file_path = os.path.join(temp_dir, uploaded_file.name)
+    with open(file_path, "wb") as f:
         f.write(uploaded_file.getbuffer())
-    st.success("File uploaded successfully!")
 
-# Add a sidebar
-with st.sidebar:
-    st.header("About")
-    st.markdown("""This app helps you enhance your resume with AI-powered suggestions. Upload your resume and get personalized recommendations to make it stand out!""")
+    # Process resume and JD
+    resume_keywords, jd_keywords, score, matched = process_resume_and_jd(uploaded_file, jd_text)
 
-# Job Role / Job Description Input
-st.header("Job Role or Job Description")
-job_role = st.text_input("Enter Job Role (e.g., 'Frontend Developer')")
+    # Output
+    st.subheader("🔍 Extracted Keywords")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("**Resume Keywords:**")
+        st.write(resume_keywords)
+    with col2:
+        st.markdown("**JD Keywords:**")
+        st.write(jd_keywords)
 
-job_description = st.text_area("Or enter Job Description (optional)")
-
-# If either field is filled, process the inputs
-if job_role or job_description:
-    if job_role:
-        st.write(f"🔍 Searching keywords for job role: **{job_role}**")
-        # Here, you'll eventually integrate LLM to fetch keywords based on the role
-        # Placeholder for LLM output (e.g., Frontend, JavaScript, React)
-        job_keywords = ["Frontend", "JavaScript", "React", "CSS", "HTML"]
-
-    if job_description:
-        st.write("🔍 Extracting keywords from the Job Description...")
-        # Placeholder logic for extracting keywords from JD (e.g., using spaCy or a basic method)
-        job_keywords = ["Frontend", "JavaScript", "React", "CSS", "UI/UX"]
-
-    # Display extracted Job Keywords
-    st.write("### Extracted Job Keywords:")
-    st.write(job_keywords)
-
+    # Display match score and matched keywords
+    st.success(f"🎯 Match Score: {score:.2f}%")
+    st.markdown("✅ **Matched Keywords:**")
+    st.write(matched)
