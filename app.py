@@ -1,5 +1,3 @@
-# app.py
-
 import streamlit as st
 import os
 from logic import process_resume_and_jd
@@ -29,7 +27,12 @@ if uploaded_file and jd_text:
         f.write(uploaded_file.getbuffer())
 
     # Process resume and JD
-    resume_keywords, jd_keywords, score, matched = process_resume_and_jd(uploaded_file, jd_text)
+    result = process_resume_and_jd(file_path, jd_text)
+
+    resume_keywords = result["resume_keywords"]
+    jd_keywords = result["jd_keywords"]
+    score = result["match_score"]
+    matched = result["matched_keywords"]
 
     # Output
     st.subheader("🔍 Extracted Keywords")
@@ -45,3 +48,21 @@ if uploaded_file and jd_text:
     st.success(f"🎯 Match Score: {score:.2f}%")
     st.markdown("✅ **Matched Keywords:**")
     st.write(matched)
+
+    # Show missing skills
+    missing_skills = list(set(jd_keywords) - set(resume_keywords))
+    if missing_skills:
+        st.warning("🚫 **Missing Skills (Consider Adding):**")
+        st.write(missing_skills)
+
+        # Suggestions
+        st.subheader("📈 Suggestions to Improve Resume")
+        for skill in missing_skills:
+            st.markdown(f"- Consider adding **{skill}** if relevant to your experience.")
+
+        # YouTube learning resources
+        st.subheader("🎥 Learn Missing Skills (YouTube)")
+        for skill in missing_skills:
+            search_query = skill.replace(" ", "+")
+            youtube_search_link = f"https://www.youtube.com/results?search_query={search_query}+tutorial"
+            st.markdown(f"[🔍 Learn {skill} on YouTube]({youtube_search_link})")
